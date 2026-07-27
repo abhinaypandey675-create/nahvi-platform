@@ -1,0 +1,209 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- Auth ----------
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  passwordHash  String? // null for OAuth-only accounts
+  emailVerified DateTime?
+  image         String?
+  role          Role      @default(USER)
+  createdAt     DateTime  @default(now())
+
+  accounts      Account[]
+  sessions      Session[]
+  loginEvents   LoginEvent[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// Every login is logged here -> powers both the admin dashboard "recent logins"
+// list and the email notification.
+model LoginEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ip        String?
+  country   String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@map("login_events")
+}
+
+// ---------- Content: Apps ----------
+
+enum AppStatus {
+  LIVE
+  BUILDING
+  BETA
+  ARCHIVED
+}
+
+model App {
+  id           String    @id @default(cuid())
+  slug         String    @unique
+  name         String
+  tagline      String?
+  description  String    @db.Text
+  problem      String?   @db.Text
+  solution     String?   @db.Text
+  heroImage    String?
+  screenshots  String[]  @default([])
+  demoVideo    String?
+  status       AppStatus @default(BUILDING)
+  category     String?
+  tags         String[]  @default([])
+  technologies String[]  @default([])
+  pricing      String?
+  githubUrl    String?
+  liveUrl      String?
+  docsUrl      String?
+  featured     Boolean   @default(false)
+  published    Boolean   @default(false)
+  sortOrder    Int       @default(0)
+  viewCount    Int       @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  requests AppRequest[]
+
+  @@map("apps")
+}
+
+model AppRequest {
+  id        String   @id @default(cuid())
+  appId     String?
+  app       App?     @relation(fields: [appId], references: [id], onDelete: SetNull)
+  name      String
+  email     String
+  budget    String?
+  message   String   @db.Text
+  createdAt DateTime @default(now())
+
+  @@map("app_requests")
+}
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  message   String   @db.Text
+  createdAt DateTime @default(now())
+
+  @@map("contact_messages")
+}
+
+// ---------- Content: Testimonials / Blog / FAQ ----------
+
+model Testimonial {
+  id        String   @id @default(cuid())
+  name      String
+  role      String?
+  company   String?
+  logo      String?
+  quote     String   @db.Text
+  rating    Int      @default(5)
+  published Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@map("testimonials")
+}
+
+model BlogPost {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  title       String
+  excerpt     String?
+  contentMd   String    @db.Text
+  coverImage  String?
+  category    String?
+  tags        String[]  @default([])
+  published   Boolean   @default(false)
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("blog_posts")
+}
+
+model Faq {
+  id        String  @id @default(cuid())
+  appId     String?
+  question  String
+  answer    String  @db.Text
+  sortOrder Int     @default(0)
+
+  @@map("faqs")
+}
+
+// ---------- Misc ----------
+
+model NewsletterSubscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+
+  @@map("newsletter_subscribers")
+}
+
+model Setting {
+  key   String @id
+  value String @db.Text
+
+  @@map("settings")
+}
