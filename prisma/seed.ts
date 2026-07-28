@@ -1,5 +1,4 @@
-@'
-import { PrismaClient } from "@prisma/client";
+﻿import { PrismaClient } from "@prisma/client";
 import { PrismaNeon } from "@prisma/adapter-neon";
 import { Pool, neonConfig } from "@neondatabase/serverless";
 import ws from "ws";
@@ -11,8 +10,6 @@ const adapter = new PrismaNeon(pool);
 const prisma = new PrismaClient({ adapter } as any);
 
 async function main() {
-  // ---------- Admin account ----------
-  // Change this password immediately after first login.
   const adminEmail = process.env.ADMIN_NOTIFY_EMAIL || "abhinaypandey675@gmail.com";
   const adminPassword = "ChangeMe123!";
   const passwordHash = await bcrypt.hash(adminPassword, 12);
@@ -31,7 +28,6 @@ async function main() {
 
   console.log(`Admin account ready: ${adminEmail} / ${adminPassword} (change this password after first login)`);
 
-  // ---------- Apps, ported from the original static site ----------
   const apps = [
     {
       slug: "resumeai",
@@ -97,4 +93,3 @@ main()
     process.exit(1);
   })
   .finally(() => prisma.$disconnect());
-'@ | Set-Content -Path prisma\seed.ts -Encoding utf8
