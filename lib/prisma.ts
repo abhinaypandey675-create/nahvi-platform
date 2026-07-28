@@ -5,7 +5,6 @@ import ws from "ws";
 
 neonConfig.webSocketConstructor = ws;
 neonConfig.poolQueryViaFetch = true;
-neonConfig.fetchOptions = { cache: "no-store" };
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
