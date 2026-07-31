@@ -30,22 +30,13 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        console.log("LOGIN ATTEMPT:", credentials?.email, "pw length:", credentials?.password?.length);
         if (!credentials?.email || !credentials?.password) return null;
 
         const user = await prisma.user.findUnique({ where: { email: credentials.email } });
-        console.log("USER FOUND:", user ? user.email : "NONE", "hash exists:", !!user?.passwordHash);
-        console.log("HASH FROM APP:", JSON.stringify(user?.passwordHash));
         if (!user || !user.passwordHash) return null;
 
         const valid = await bcrypt.compare(credentials.password, user.passwordHash);
-        console.log("PASSWORD VALID:", valid);
         if (!valid) return null;
-
-        if (!user.emailVerified) {
-          console.log("EMAIL NOT VERIFIED");
-          throw new Error("EmailNotVerified");
-        }
 
         return { id: user.id, name: user.name, email: user.email, role: user.role };
       },
@@ -61,8 +52,8 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       if (session.user) {
-        (session.user as any).id = token.id;
-        (session.user as any).role = token.role;
+        session.user.id = token.id as string;
+        session.user.role = token.role as "USER" | "ADMIN";
       }
       return session;
     },
