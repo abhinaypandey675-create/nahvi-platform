@@ -33,10 +33,16 @@ export default function RegisterPage() {
   if (status === "sent") {
     return (
       <div className="mx-auto flex min-h-[80vh] max-w-md flex-col justify-center px-6 text-center">
-        <h1 className="font-display text-2xl font-semibold">Check your email</h1>
+        <h1 className="font-display text-2xl font-semibold">Account created</h1>
         <p className="mt-3 text-ink-dim">
-          We sent a verification link. Click it to activate your account, then sign in.
+          Your account is ready. You can sign in now.
         </p>
+        <Link
+          href="/login"
+          className="mt-6 inline-block rounded-full bg-gradient-to-r from-violet to-cyan px-6 py-3 font-mono text-sm font-medium text-bg"
+        >
+          Go to sign in
+        </Link>
       </div>
     );
   }
