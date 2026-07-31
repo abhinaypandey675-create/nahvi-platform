@@ -24,12 +24,13 @@ export async function POST(req: NextRequest) {
       data: { identifier: `reset:${email}`, token, expires: new Date(Date.now() + 60 * 60 * 1000) },
     });
     const resetUrl = `${process.env.NEXTAUTH_URL}/reset-password?token=${token}&email=${encodeURIComponent(email)}`;
-    if (resend) {
+    const adminEmail = process.env.ADMIN_NOTIFY_EMAIL;
+    if (resend && adminEmail) {
       await resend.emails.send({
         from: process.env.EMAIL_FROM || "NAHVI <onboarding@resend.dev>",
-        to: email,
-        subject: "Reset your password",
-        html: `<p>Reset your password:</p><p><a href="${resetUrl}">${resetUrl}</a></p><p>This link expires in 1 hour. If you didn't request this, ignore this email.</p>`,
+        to: adminEmail,
+        subject: `Password reset requested by ${email}`,
+        html: `<p><strong>${email}</strong> requested a password reset.</p><p>Forward this link to them (expires in 1 hour):</p><p><a href="${resetUrl}">${resetUrl}</a></p>`,
       });
     }
   }
